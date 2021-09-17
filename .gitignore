@@ -1,0 +1,7 @@
+/x64/*
+/.vs/*
+/ARP-UDP_WinPcap_Library/x64/*
+/Debug/*
+/ARP-UDP_WinPcap_Library/Debug/*
+/ARP-UDP_WinPcap_Library/Release/*
+/Release/*
