@@ -374,7 +374,7 @@ int QMCFindDevice(std::vector<QMCDeviceInfo>& device_infos)
 	mux.lock();
 	for (auto _it = valid_ada.begin(); _it != valid_ada.end(); ++_it)
 	{
-		pcap_t* handler = pcap_open_live(_it->name.c_str(), 65535, 1, 1000, error_buffer);
+		pcap_t* handler = pcap_open_live(_it->name.c_str(), 65535, 1, 100, error_buffer);
 		if (!handler)
 		{
 			continue;
@@ -412,6 +412,7 @@ int QMCFindDevice(std::vector<QMCDeviceInfo>& device_infos)
 
 		pcap_pkthdr* pkthdr = nullptr;
 		const u_char* pkt_data = nullptr;
+		int times_flag = 0;
 		while (true)
 		{
 			int ret = pcap_next_ex(handler, &pkthdr, &pkt_data);
@@ -472,7 +473,17 @@ int QMCFindDevice(std::vector<QMCDeviceInfo>& device_infos)
 			}
 			else
 			{
-				break;
+				if (!response_ada.empty())
+				{
+					break;
+				}
+
+				if (times_flag)
+				{
+					break;
+				}
+
+				++times_flag;
 			}
 		}
 		delete send_packet;
