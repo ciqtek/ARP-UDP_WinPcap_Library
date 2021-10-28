@@ -179,7 +179,7 @@ bool CUDPCommunication::Bind(std::string local_ip, std::string local_mac, std::s
 	}
 
 	bpf_program fcode;
-	if (pcap_compile(m_pcap, &fcode, ("udp and src host " + device_ip).c_str(), 1, netmask) == 0)
+	if (pcap_compile(m_pcap, &fcode, ("udp and src host " + device_ip + " and ether src " + device_mac).c_str(), 1, netmask) == 0)
 	{
 		pcap_setfilter(m_pcap, &fcode);
 	}
