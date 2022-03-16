@@ -6,7 +6,7 @@
 #include "winsock2.h"
 
 #include <string>
-#include <vector>
+#include <algorithm>
 
 #define LIBPATH(p,f)   p##f
 #ifdef _WIN64
@@ -260,6 +260,56 @@ int CUDPCommunication::Read(unsigned short dest_port, unsigned char* buffer, int
 
 	UdpHeaderStructure* udp = (UdpHeaderStructure*)((unsigned char*)ip + ip_header_len);
 	if (ntohs(udp->DestinationPort) != dest_port)
+	{
+		return -1;
+	}
+
+	int data_len = ntohs(udp->PacketLength) - sizeof(UdpHeaderStructure);
+	if (size < data_len)
+	{
+		return -1;
+	}
+
+	memcpy(buffer, (unsigned char*)udp + sizeof(UdpHeaderStructure), data_len);
+
+	return data_len;
+}
+
+int CUDPCommunication::Read(std::vector<unsigned short> dest_ports, unsigned char* buffer, int size)
+{
+	std::lock_guard<std::mutex> read_lck(read_mux);
+
+	if (!is_init_success || !m_pcap)
+	{
+		return -1;
+	}
+
+	const u_char * pkt_data = nullptr;
+	pcap_pkthdr* header = nullptr;
+
+	int ret = pcap_next_ex(m_pcap, &header, &pkt_data);
+
+	if (ret != 1 || header->caplen != header->len)
+	{
+		return -1;
+	}
+
+	IpSeaderStructure* ip = (IpSeaderStructure*)(pkt_data + sizeof(EthernetHeader));
+	int ip_header_len = (ip->Version_HeadLength & 0xf) * 4;
+
+	UdpHeaderStructure* udp = (UdpHeaderStructure*)((unsigned char*)ip + ip_header_len);
+	unsigned short dest_port = ntohs(udp->DestinationPort);
+	auto pos = std::find_if(dest_ports.begin(), dest_ports.end(), [&dest_port](auto& item)
+	{
+		if (item == dest_port)
+		{
+			return true;
+		}
+
+		return false;
+	});
+
+	if (pos == dest_ports.end())
 	{
 		return -1;
 	}

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <atomic>
 #include <mutex>
+#include <vector>
 
 #include "WinPcap/Include/pcap.h"
 
@@ -56,6 +57,7 @@ public:
 	bool Bind(std::string local_ip, std::string local_mac, std::string device_ip, std::string device_mac);
 	int  Write(unsigned short src_port, unsigned short dest_port, const unsigned char* buffer, int len);
 	int  Read(unsigned short dest_port, unsigned char* buffer, int size);
+	int  Read(std::vector<unsigned short> dest_ports, unsigned char* buffer, int size);
 	bool Close();
 
 private:
